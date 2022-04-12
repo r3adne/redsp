@@ -1,0 +1,5 @@
+# todo
+
+* add cmake for test project 
+* add main tests project, implementing math tests
+
