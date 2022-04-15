@@ -5,6 +5,7 @@
  * - check stability limit
  * - implement L2 norm
  * - write tests
+ * - ensure correct operation if SampleType is non-float
  *
  * See redsp/LICENSE for license information.
 */
@@ -27,7 +28,8 @@ template <std::arithmetic SampleType, positive Channels = 1, std::floating_point
 #else
 template<typename SampleType = double, int Channels = 1, typename CoeffType = double>
 #endif
-struct svf {
+struct svf
+{
     enum class SVFType
     {
         Highpass = 0,
