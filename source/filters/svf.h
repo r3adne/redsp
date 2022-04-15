@@ -18,7 +18,7 @@
 
 namespace redsp {
 /**
- * @brief state-variable filter implementation. Note instability in response to rapid cutoff modulation
+ * @brief 2nd-order state-variable filter implementation. Note instability in response to rapid cutoff modulation
  * This is a reference implementation of the SVF described by Udo Zolzer in DAFx (2nd edition). see fastsvf for a filter
  * with appropriate modulation handling for fast cutoff modulation.
  */
@@ -135,7 +135,7 @@ struct svf {
      * @param Q1 1 / Q
      * @return true if coefficients were changed, otherwise returns false.
      */
-    bool calc_stable_k(CoeffType F1, CoeffType Q1)
+    bool calc_stable_direct(CoeffType const& F1, CoeffType const& Q1)
     {
         if (F1 < 2 - Q1)
         {
@@ -153,10 +153,33 @@ struct svf {
      * @param Q Resonance of the filter (usually normalised within 0,1)
      * @return true if coefficients were changed, otherwise returns false.
      */
-    bool calc_stable(CoeffType fc, CoeffType Q)
+    bool calc_stable(CoeffType const& fc, CoeffType const& Q)
     {
         auto F1 = CoeffType(2) * redsp::sin(redsp::pi * (fc / _fs));
-        return calc_stable_k(F1, 1 / Q);
+        return calc_stable_direct(F1, 1 / Q);
+    }
+
+    /**
+     * Sets the coefficients F1 and Q1 without checking filter stability
+     * @param F1 2 * sin(pi * (fc/fs));
+     * @param Q1 1 / Q
+     */
+    void calc_unsafe_direct(CoeffType const& F1, CoeffType const& Q1)
+    {
+        q1 = Q1;
+        f1 = F1;
+    }
+
+    /**
+     * Sets the coefficients F1 and Q1 via conversions from cutoff frequency @param fc and Q @param Q
+     * @param fc Cutoff frequency of the filter, in Hz.
+     * @param Q Resonance of the filter (usually normalised within 0,1)
+     */
+    void calc_unsafe(CoeffType const& fc, CoeffType const& Q)
+    {
+
+        auto F1 = CoeffType(2) * redsp::sin(redsp::pi * (fc / _fs));
+        calc_unsafe_direct(F1, 1/Q);
     }
 
 
