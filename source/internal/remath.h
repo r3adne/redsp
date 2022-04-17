@@ -1,28 +1,19 @@
 /**
  * Created on April 15, 2022 by Ariadne Lewis-Towbes
  * TODO:
- * - add dedicated double approximation of log2(x)
- * - add int log2(x) (easy using bsr, but not portable so find smth else)
  * - add propert cxx20 support
  * - add concepts <3
  * See redsp/LICENSE for license information.
 */
+#ifndef REDSP_MATH_HEADERGUARD
+#define REDSP_MATH_HEADERGUARD
 
 #include <type_traits>
 #include <cmath>
+#include "universal.h"
+
 #ifdef redsp_cxx20
 #include <concepts>
-#endif
-#ifdef redsp_cxx20
-#define redsp_arithmetic std::arithmetic
-#define redsp_arithmetic_assert
-#define redsp_inttype
-#define redsp_uinttype
-#else
-#define redsp_arithmetic typename
-#define redsp_inttype typename
-#define redsp_uinttype typename
-#define redsp_arithmetic_assert(T) static_assert(std::is_arithmetic<T>::value, "T must be arithmetic silly.");
 #endif
 
 // add pi, sin, etc impls
@@ -82,7 +73,7 @@ struct math
     static T tan_fast(T x)
     {
         redsp_arithmetic_assert(T)
-//        return static_cast<T>(tanh(x));
+        return static_cast<T>(tanh(x));
     }
 
     //! returns tanh(x) using stl implementation
@@ -98,41 +89,15 @@ struct math
     static T tanh_fast(T x)
     {
         redsp_arithmetic_assert(T)
-//        return static_cast<T>(tanh(x));
+        return static_cast<T>(tanh(x));
     }
 
 
     template <redsp_arithmetic T>
     static T log_fast(T x)
     {
-
+        return 0; // only use specializations!
     }
-
-    //! pretty gross, but returns a good log approximation fast. Inspired by Q library (unsure of origin).
-    template<>
-    float log_fast(float x)
-    {
-        static_assert(std::numeric_limits<float>::is_iec559, "floats must be ieee for this to work");
-        uint32_t vi, mi;
-        float mf, y;
-        std::memcpy(&vi, &x, 4);
-        mi = (vi & 0x007fffff) | 0x3f000000;
-        std::memcpy(&mf, &mi, 4);
-        y = (float) vi * 1.1920928955078125e-7f; // bruh
-
-        return y - 124.22551499f
-               - 1.498030302f * mf
-               - 1.72587999f / (0.3520887068f + mf);
-    }
-
-    template<>
-    double log_fast(double x)
-    {
-        // this is ok for now until I figure out how to write a dedicated double version of this
-        return static_cast<double>(log_fast(static_cast<float>(x)));
-    }
-
-
 
     //================================================================================================================//
     //==                                                                                                            ==//
@@ -190,6 +155,34 @@ struct math
     }
 
 
+};
+
+//! pretty gross, but returns a good log approximation fast. Inspired by Q library (unsure of origin).
+template<>
+float math::log_fast(float x)
+{
+    static_assert(std::numeric_limits<float>::is_iec559, "floats must be ieee for this to work");
+    uint32_t vi, mi;
+    float mf, y;
+    std::memcpy(&vi, &x, 4);
+    mi = (vi & 0x007fffff) | 0x3f000000;
+    std::memcpy(&mf, &mi, 4);
+    y = (float) vi * 1.1920928955078125e-7f; // bruh
+
+    return y - 124.22551499f
+           - 1.498030302f * mf
+           - 1.72587999f / (0.3520887068f + mf);
 }
+
+template<>
+double math::log_fast(double x)
+{
+    // this is ok for now until I figure out how to write a dedicated double version of this
+    return static_cast<double>(log_fast(static_cast<float>(x)));
+}
+
+
+
 } // namespace redsp
 
+#endif // REDSP_MATH_HEADERGUARD

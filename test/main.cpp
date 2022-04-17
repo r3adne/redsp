@@ -1,5 +1,7 @@
 #include <juce_core/juce_core.h>
 #include "../source/redsp.h"
+#include "biquad_tests.h"
+#include "svf_tests.h"
 
 int main(int argc, char** argv)
 {

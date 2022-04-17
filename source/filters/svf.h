@@ -9,9 +9,15 @@
  *
  * See redsp/LICENSE for license information.
 */
+#ifndef REDSP_SVF_HEADERGUARD
+#define REDSP_SVF_HEADERGUARD
+
 #include <type_traits>
 
 #include "../internal/remath.h"
+#include "../internal/universal.h"
+
+
 
 #ifdef redsp_cxx20
 #include <concepts>
@@ -26,7 +32,7 @@ namespace redsp {
 #ifdef redsp_cxx20
 template <std::arithmetic SampleType, positive Channels = 1, std::floating_point CoeffType>
 #else
-template<typename SampleType = double, int Channels = 1, typename CoeffType = double>
+template<typename SampleType = double, size_t Channels = 1, typename CoeffType = double>
 #endif
 struct svf
 {
@@ -113,8 +119,8 @@ struct svf
      * @param samples input samples, of shape (Channels, samples)
      * @param count the number of samples per channel in the input frame (@param samples should be length `count * N`)
      */
-    template <SVFType t>
-    std::enable_if<Channels != 1, void> process(SampleType **samples, int count)
+    template <SVFType t, typename std::enable_if<Channels != 1, void>::type>
+    void process(SampleType **samples, int count)
     {
         for (int i = 0; i < Channels - 1; ++i) { process(samples[i * count], count, i); }
     }
@@ -188,3 +194,5 @@ struct svf
 };
 
 } // namespace redsp
+
+#endif // REDSP_SVF_HEADERGUARD

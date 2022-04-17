@@ -4,24 +4,22 @@
  *
  * See redsp/LICENSE for license information.
 */
+#ifndef REDSP_BIQUAD_HEADERGUARD
+#define REDSP_BIQUAD_HEADERGUARD
+
 #include <type_traits>
 #include <array>
 #include "../internal/remath.h"
+#include "../internal/universal.h"
 
 #ifdef redsp_cxx20
 #include <concepts>
 #endif
 
-#ifdef redsp_cxx20
-#define redsp_arithmetic std::arithmetic
-#define redsp_arithmetic_assert
-#else
-#define redsp_arithmetic typename
-#define redsp_arithmetic_assert(T) static_assert(std::is_arithmetic<T>::value, "T must be arithmetic.");
-#endif
+
 namespace redsp {
 
-template <redsp_arithmetic SampleType, redsp_arithmetic CoeffType, int Channels = 1, bool SingleSampleProcessing = false>
+template <redsp_arithmetic SampleType, redsp_arithmetic CoeffType, size_t Channels = 1, bool SingleSampleProcessing = false>
 struct biquad
 {
     redsp_arithmetic_assert(SampleType)
@@ -42,6 +40,7 @@ struct biquad
     std::array<std::array<SampleType, 2>, Channels> x;
     std::array<std::array<SampleType, 2>, Channels> y;
 
+    biquad() = default;
 private:
     inline SampleType td2(SampleType const& x0, SampleType const& x1, SampleType const& x2, SampleType const& y1, SampleType const& y2 )
     {
@@ -49,22 +48,24 @@ private:
     }
 public:
 
-    std::enable_if<SingleSampleProcessing, SampleType> process(SampleType const& sample, int n = 0)
+    template<class enabled = std::enable_if<SingleSampleProcessing, void>>
+    SampleType process(SampleType const& sample, int n = 0)
     {
-        auto& X = x[n];
-        auto& Y = y[n];
+        auto& X = x[static_cast<typename decltype(x)::size_type>(n)];
+        auto& Y = y[static_cast<typename decltype(y)::size_type>(n)];
         auto s = td2(sample, X[0], X[1], Y[0], Y[1]);
 
         // shuffle - avoided in process(SampleType*, int, int) when
-        x[1] = x[0];
-        x[0] = sample;
-        y[1] = y[0];
-        y[0] = s;
+        X[1] = X[0];
+        X[0] = sample;
+        Y[1] = Y[0];
+        Y[0] = s;
 
         return s;
     }
 
-    std::enable_if<SingleSampleProcessing, void> process(SampleType* samples, int count, int n = 0)
+    template<class enabled = std::enable_if<SingleSampleProcessing, void>>
+    void process(SampleType* samples, int count, int n = 0)
     {
         for (auto* s = samples; s != samples + count; ++s)
         {
@@ -78,7 +79,8 @@ public:
      * @param count number of samples to process
      * @param n channel to process samples on
      */
-    std::enable_if<! SingleSampleProcessing, void> process_optimized(SampleType *const samples, int count, int n = 0)
+    template<class enabled = std::enable_if<! SingleSampleProcessing, void>>
+    void process_optimized(SampleType *const samples, int count, int n = 0)
     {
         auto& X = x[n];
         auto& Y = y[n];
@@ -115,7 +117,8 @@ public:
      * @param count number of samples to process
      * @param n channel to process samples on
      */
-    std::enable_if<! SingleSampleProcessing, void> process_optimized(SampleType const *const input, SampleType *const output, int count, int n = 0)
+    template<class enabled = std::enable_if<! SingleSampleProcessing, void>>
+    void process_optimized(SampleType const *const input, SampleType *const output, int count, int n = 0)
     {
         auto& X = x[n];
         auto& Y = y[n];
@@ -135,17 +138,20 @@ public:
     }
 
 
-    std::enable_if<Channels != 1 && ! SingleSampleProcessing, void> process_optimized(SampleType** samples, int count)
+    template<class enabled = std::enable_if<Channels != 1 && ! SingleSampleProcessing>>
+    void process_optimized(SampleType** samples, int count)
     {
         for (int i = 0; i < Channels; ++i) { process_optimized(samples[count * i], count); }
     }
 
-    std::enable_if<Channels != 1 && ! SingleSampleProcessing, void> process_optimized(SampleType** input, SampleType** output, int count)
+    template<class enabled = std::enable_if<Channels != 1 && ! SingleSampleProcessing>>
+    void process_optimized(SampleType** input, SampleType** output, int count)
     {
         for (int i = 0; i < Channels; ++i) { process_optimized(input[count * i], output[count * i], count); }
     }
 
-    std::enable_if<Channels != 1, void> process(SampleType** samples, int count )
+    template<class enabled = std::enable_if<Channels != 1>>
+    void process(SampleType** samples, int count )
     {
         for (int i = 0; i < Channels; ++i)
         {
@@ -345,6 +351,7 @@ public:
     template <Type FilterType>
     void calc(CoeffType fc, CoeffType fs, CoeffType Q) { calc<FilterType>(fc/fs, Q); }
 
+#ifdef redsp_cxx20
     template <>
     void calc<Type::Lowpass>(CoeffType f, CoeffType Q) { calc_lp(f, Q); }
     template <>
@@ -355,8 +362,9 @@ public:
     void calc<Type::Bandreject>(CoeffType f, CoeffType Q) { calc_br(f, Q); }
     template <>
     void calc<Type::Allpass>(CoeffType f, CoeffType Q) { calc_ap(f, Q); }
-
-
+#endif
 };
 
 } // namespace redsp
+
+#endif // REDSP_BIQUAD_HEADERGUARD
