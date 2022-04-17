@@ -1,4 +1,5 @@
 #include <juce_core/juce_core.h>
+#include "../source/redsp.h"
 
 int main(int argc, char** argv)
 {
@@ -8,6 +9,6 @@ int main(int argc, char** argv)
   app.addHelpCommand("--help|-h", "use", true);
   app.addCommand({"--seed|-s", "Sets the random seed for running", "Sets the random seed for running", "", [&seed](const juce::ArgumentList& args){ seed = args.getValueForOption("--seed|-s").getLargeIntValue(); }});
   app.addCommand({"--all|-a", "Runs all tests", "Runs all tests", "",[&runner, seed](const auto&){ runner.runAllTests(seed); } } );
-  app.addCommand({"--category|-c", "runs all tests in the given category", "", "", [](const juce::ArgumentList& args){} });
+  app.addCommand({"--category|-c", "runs all tests in the given category", "", "", [&runner, seed](const juce::ArgumentList& args){ runner.runTestsInCategory(args.getValueForOption("--category|-c")); } });
   return app.findAndRunCommand(argc, argv);
 }
