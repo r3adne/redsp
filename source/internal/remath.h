@@ -81,7 +81,7 @@ struct math
     static T tanh(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(tanh(x));
+        return static_cast<T>(std::tanh(x));
     }
 
     //! returns an approximation of tanh(x), diverging outside

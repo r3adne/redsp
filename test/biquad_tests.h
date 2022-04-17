@@ -46,7 +46,11 @@ private:
                 b->process(getRandom().nextDouble());
             }
         }
+
     }
 };
+
+static BiquadTest biquadTest;
+
 
 #endif // REDSP_BIQUADTESTS_HEADERGUARD
