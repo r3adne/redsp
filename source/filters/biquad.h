@@ -34,6 +34,7 @@ struct biquad
         Bandpass,
         Highpass,
         Bandreject,
+        Allpass,
 
     };
 
@@ -338,6 +339,24 @@ public:
         a1 = (2 * q * (kk - 1)) / den;
         a2 = (den-k-k) / den;
     }
+
+    template <Type FilterType>
+    void calc(CoeffType, CoeffType ) { }
+    template <Type FilterType>
+    void calc(CoeffType fc, CoeffType fs, CoeffType Q) { calc<FilterType>(fc/fs, Q); }
+
+    template <>
+    void calc<Type::Lowpass>(CoeffType f, CoeffType Q) { calc_lp(f, Q); }
+    template <>
+    void calc<Type::Highpass>(CoeffType f, CoeffType Q) { calc_hp(f, Q); }
+    template <>
+    void calc<Type::Bandpass>(CoeffType f, CoeffType Q) { calc_bp(f, Q); }
+    template <>
+    void calc<Type::Bandreject>(CoeffType f, CoeffType Q) { calc_br(f, Q); }
+    template <>
+    void calc<Type::Allpass>(CoeffType f, CoeffType Q) { calc_ap(f, Q); }
+
+
 };
 
 } // namespace redsp
