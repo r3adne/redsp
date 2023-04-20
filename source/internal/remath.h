@@ -33,7 +33,7 @@ struct math
     static T sin(T x)
     {
         redsp_arithmetic_assert(T)
-        return sin(x);
+        return std::sin(x);
     }
 
     //! returns an approximation of sin(x), diverging outside ().
@@ -41,7 +41,15 @@ struct math
     static T sin_fast(T x)
     {
         redsp_arithmetic_assert(T)
-//        return ;
+        return  std::sin(x); // todo: add pade approx of sin
+    }
+
+    //! returns an approximation of sin(x), diverging outside ().
+    template <redsp_arithmetic T>
+    static T sin_faster(T x)
+    {
+        redsp_arithmetic_assert(T)
+        return  std::sin(x); // todo: add fast approx of sin
     }
 
     //! returns cos(x) using stl implementation
@@ -49,7 +57,7 @@ struct math
     static T cos(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(cos(x));
+        return static_cast<T>(std::cos(x));
     }
 
     //! returns an approximation of cos(x), diverging outside ().
@@ -57,7 +65,15 @@ struct math
     static T cos_fast(T x)
     {
         redsp_arithmetic_assert(T)
-        // return ;
+         return cos(x); // todo: add pade approx of cos
+    }
+
+    //! returns an approximation of cos(x), diverging outside ().
+    template <redsp_arithmetic T>
+    static T cos_faster(T x)
+    {
+        redsp_arithmetic_assert(T)
+        return cos(x); // todo: add faster approx of cos
     }
 
     //! returns tan(x) using stl implementation
@@ -73,7 +89,15 @@ struct math
     static T tan_fast(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(tanh(x));
+        return static_cast<T>(std::tanh(x)); // todo: add pade approx of tan
+    }
+
+    //! returns an approximation of tan(x), diverging outside ()
+    template <redsp_arithmetic T>
+    static T tan_faster(T x)
+    {
+        redsp_arithmetic_assert(T)
+        return static_cast<T>(std::tanh(x)); // todo: add fast approx of tan
     }
 
     //! returns tanh(x) using stl implementation
@@ -81,15 +105,24 @@ struct math
     static T tanh(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(tanh(x));
+        return static_cast<T>(std::tanh(x));
     }
 
-    //! returns an approximation of tanh(x), diverging outside
+    //! returns an approximation of tanh(x), diverging outside ()
     template <redsp_arithmetic T>
     static T tanh_fast(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(tanh(x));
+        return static_cast<T>(std::tanh(x)); // todo: add fast approx of tanh
+    }
+
+
+    //! returns an approximation of tanh(x), diverging outside ()
+    template <redsp_arithmetic T>
+    static T tanh_faster(T x)
+    {
+        redsp_arithmetic_assert(T)
+        return static_cast<T>(std::tanh(x)); // todo: add faster approx of tanh
     }
 
 
