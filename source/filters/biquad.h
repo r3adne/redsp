@@ -1,6 +1,5 @@
 /**
  * Created on April 16, 2022 by Ariadne Lewis-Towbes
- * TODO:
  *
  * See redsp/LICENSE for license information.
 */

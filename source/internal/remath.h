@@ -157,7 +157,7 @@ struct math
     //================================================================================================================//
 
 
-    // todo: improve me
+    // todo: improve pi() so that it returns pi as different types when needed
     //! returns pi
     template <redsp_arithmetic T>
     inline static constexpr T pi()
@@ -179,7 +179,7 @@ struct math
         return pi<T>() * 0.5;
     }
 
-    // todo: make me not rely on non-constexpr library function
+    // todo: make e() not rely on non-constexpr library function
     //! returns e
     template <redsp_arithmetic T>
     inline static constexpr T e()
