@@ -21,6 +21,7 @@ this is as much an exercise in working through these sorts of problems as it is 
 - add fast approx of tanh
 - add faster approx of tanh
 ### project
+- allow arbitrary processors to be accessed through a `processor` type
 - add math tests
 - finish svf
 - add svftests
