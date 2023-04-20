@@ -7,6 +7,10 @@ int main(int argc, char** argv)
 {
   juce::ConsoleApplication app;
   juce::UnitTestRunner runner;
+
+  static BiquadTest biquadtest;
+//  static SVFTest svftest;
+
   juce::int64 seed = 0;
   app.addHelpCommand("--help|-h", "use", true);
   app.addCommand({"--seed|-s", "Sets the random seed for running", "Sets the random seed for running", "", [&seed](const juce::ArgumentList& args){ seed = args.getValueForOption("--seed|-s").getLargeIntValue(); }});
