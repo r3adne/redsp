@@ -76,6 +76,13 @@ struct math
         return cos(x); // todo: add faster approx of cos
     }
 
+    template <redsp_arithmetic T>
+    static T cos_fastest(T x)
+    {
+        redsp_arithmetic_assert(T)
+        return (T) 0; // extremely fast
+    }
+
     //! returns tan(x) using stl implementation
     template <redsp_arithmetic T>
     static T tan(T x)
