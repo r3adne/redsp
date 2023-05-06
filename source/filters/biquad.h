@@ -11,6 +11,8 @@
 #include "../internal/remath.h"
 #include "../internal/universal.h"
 
+
+
 #ifdef redsp_cxx20
 #include <concepts>
 #endif
@@ -32,7 +34,9 @@ struct biquad
         Highpass,
         Bandreject,
         Allpass,
-
+        Lowshelf,
+        Highshelf,
+        Peaking
     };
 
     CoeffType a1, a2, b0, b1, b2;
@@ -46,6 +50,12 @@ private:
         return b0 * x0 + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
     }
 public:
+
+    template <Type FilterType>
+    void calc(CoeffType, CoeffType ) { }
+
+    template <Type FilterType>
+    void calc(CoeffType, CoeffType, CoeffType ) { }
 
     template<class enabled = std::enable_if<SingleSampleProcessing, void>>
     SampleType process(SampleType const& sample, int n = 0)
@@ -166,7 +176,7 @@ public:
      */
     void calc_lp(CoeffType f, CoeffType Q)
     {
-        calc_lp_direct(math::tan_fast(math::pi<CoeffType>() * f), Q);
+        calc_lp_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q);
     }
 
     /**
@@ -204,7 +214,7 @@ public:
      */
     void calc_hp(CoeffType f, CoeffType Q)
     {
-        calc_hp_direct(math::tan_fast(math::pi<CoeffType>() * f), Q);
+        calc_hp_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q);
     }
 
     /**
@@ -241,7 +251,7 @@ public:
      */
     void calc_bp(CoeffType f, CoeffType Q)
     {
-        calc_bp_direct(math::tan_fast(math::pi<CoeffType>() * f), Q);
+        calc_bp_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q);
     }
 
     /**
@@ -278,7 +288,7 @@ public:
      */
     void calc_ap(CoeffType f, CoeffType Q)
     {
-        calc_ap_direct(math::tan_fast(math::pi<CoeffType>() * f), Q);
+        calc_ap_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q);
     }
 
     /**
@@ -315,7 +325,7 @@ public:
      */
     void calc_br(CoeffType f, CoeffType Q)
     {
-        calc_br_direct(math::tan_fast(math::pi<CoeffType>() * f), Q);
+        calc_br_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q);
     }
 
     /**
@@ -345,10 +355,182 @@ public:
         a2 = (den-k-k) / den;
     }
 
-    template <Type FilterType>
-    void calc(CoeffType, CoeffType ) { }
-    template <Type FilterType>
-    void calc(CoeffType fc, CoeffType fs, CoeffType Q) { calc<FilterType>(fc/fs, Q); }
+    /**
+     * Calculates high shelving coefficients from normalized frequency f and Q
+     * @param f Normalized frequency
+     * @param Q Q
+     */
+    void calc_hs(CoeffType f, CoeffType Q, CoeffType gdB)
+    {
+        calc_hs_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q, pow(10, gdB * 0.05));
+    }
+
+    /**
+     * Calculates high shelving coefficients from cutoff, sampling rate, and q
+     * @param fc Cutoff frequency
+     * @param fs Sampling frequency
+     * @param Q Q
+     */
+    void calc_hs(CoeffType fc, CoeffType fs, CoeffType Q, CoeffType gdB)
+    {
+        calc_hs(fc/fs, Q, gdB);
+    }
+
+    /**
+     * Calculates high shelving coefficients from k and q:
+     * @param k tan(pi * (fc/fs))
+     * @param q Q
+     * @param a 10^(gdB/20)
+     */
+    void calc_hs_direct(CoeffType k, CoeffType a, CoeffType q)
+    {
+        auto kk = k * k;
+        auto akk = a * kk;
+        auto sqrta = remath::sqrt(a);
+        CoeffType sqrt2 = remath::sqrt2<CoeffType>();
+        auto ksqrt2 = k * sqrt2;
+        auto ksqrt2a = ksqrt2 * sqrta;
+
+        if (a > 1) // boost
+        {
+            auto den = 1 + ksqrt2 + kk;
+
+            b0 = (a + ksqrt2a + kk) / den;
+            b1 = (2 * (kk - a)) / den;
+            b2 = (a - ksqrt2a + kk) / den;
+            a1 = (2 * (kk - 1)) / den;
+            a2 = (1 - ksqrt2 + kk) / den;
+        }
+        else // cut
+        {
+            auto den = 1 + ksqrt2a + akk;
+
+            b0 = (a * (1 + ksqrt2 + kk)) / den;
+            b1 = (a * 2 * (kk - 1)) / den;
+            b2 = (a * (1 - ksqrt2 + kk)) / den;
+            a1 = (2 * (akk - 1)) / den;
+            a2 = (1 - ksqrt2a + akk) / den;
+        }
+
+    }
+
+    /**
+     * Calculates low shelving coefficients from normalized frequency f and Q
+     * @param f Normalized frequency
+     * @param Q Q
+     * @param g gain in decibels
+     */
+    void calc_ls(CoeffType f, CoeffType Q, CoeffType g)
+    {
+        calc_ls_direct(remath::tan_fast(remath::pi<CoeffType>() * f), Q, g);
+    }
+
+    /**
+     * Calculates low shelving coefficients from cutoff, sampling rate, and q
+     * @param fc Cutoff frequency
+     * @param fs Sampling frequency
+     * @param Q Q
+     * @param g gain in decibels
+     */
+    void calc_ls(CoeffType fc, CoeffType fs, CoeffType Q, CoeffType g)
+    {
+        calc_ls(fc/fs, Q, g);
+    }
+
+    /**
+     * Calculates low shelving coefficients from k and q:
+     * @param k tan(pi * (f0/fs))
+     * @param a 10^(g/20)
+     * @param q Q
+     */
+    void calc_ls_direct(CoeffType k, CoeffType a, CoeffType q)
+    {
+        auto kk = k * k;
+        auto akk = a * kk;
+        auto sqrta = remath::sqrt<CoeffType>(a);
+        CoeffType sqrt2 = remath::sqrt2<CoeffType>();
+        auto ksqrt2 = k * sqrt2;
+
+        if (a > 1) // boost
+        {
+            auto den = 1 + ksqrt2 + kk;
+
+            b0 = (1 + ksqrt2 * sqrta + akk) / den;
+            b1 = (2 * (akk - 1)) / den;
+            b2 = (1 - ksqrt2 * sqrta + akk) / den;
+            a1 = (2 * (kk - 1)) / den;
+            a2 = (1 - ksqrt2 + kk) / den;
+        }
+        else // cut
+        {
+            auto den = a + ksqrt2 * sqrta + kk;
+
+            b0 = (a * (1 + ksqrt2 + kk)) / den;
+            b1 = (2 * a * (kk - 1)) / den;
+            b2 = (a * (1 - ksqrt2 + kk)) / den;
+            a1 = (2 * (kk - a)) / den;
+            a2 = (a - ksqrt2 * a + kk) / den;
+        }
+    }
+
+    /**
+     * Calculates peaking coefficients from normalized frequency f and Q
+     * @param f Normalized frequency
+     * @param Q Q
+     */
+    void calc_peak(CoeffType f, CoeffType Q, CoeffType g)
+    {
+        calc_peak_direct(remath::tan_fast(remath::pi<CoeffType>() * f), pow(10, g * 0.05), Q);
+    }
+
+    /**
+     * Calculates peaking coefficients from cutoff, sampling rate, and q
+     * @param fc Cutoff frequency
+     * @param fs Sampling frequency
+     * @param Q Q
+     * @param g gain
+     */
+    void calc_peak(CoeffType fc, CoeffType fs, CoeffType Q, CoeffType g)
+    {
+        calc_peak(fc/fs, g, Q);
+    }
+
+    /**
+     * Calculates peaking coefficients from k and q:
+     * @param k tan(pi * (f0/fs))
+     * @param a 10^(g/20)
+     * @param q Q
+     */
+    void calc_peak_direct(CoeffType k, CoeffType a, CoeffType q)
+    {
+        auto kk = k*k;
+        auto invq = q/1;
+        auto aoverq = a/q;
+        auto kaoverq = k * aoverq;
+        auto kinvq = k * invq;
+        auto twoksquaredminus1 = (2 * (kk-1));
+        auto den = (1 + kinvq + kk);
+
+        if (a > 1) // boost
+        {
+            b0 = (1 + kaoverq  + kk) / den;
+            b1 = twoksquaredminus1 / den;
+            b2 = (1 - kaoverq + kk) / den;
+            a1 = twoksquaredminus1 / den;
+            a2 = (1 - kinvq + kk) / den;
+        }
+        else // cut
+        {
+            auto invaq = 1 / (a * q);
+
+            b0 = (1 + kinvq + kk) / den;
+            b1 = twoksquaredminus1 / den;
+            b2 = (1 - kinvq + kk) / den;
+            a1 = twoksquaredminus1 / den;
+            a2 = (1 - k * invaq + kk) / den;
+        }
+    }
+
 
 #ifdef redsp_cxx20
     template <>
