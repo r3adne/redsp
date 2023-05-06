@@ -10,7 +10,6 @@ this is as much an exercise in working through these sorts of problems as it is 
 - add proper cxx20 support
 - add concepts <3
 ### remath
-- improve pi() so that it returns pi with the accuracy of different types when needed
 - make e() not rely on non-constexpr library function
 - add pade approx of sin
 - add faster approx of sin 
