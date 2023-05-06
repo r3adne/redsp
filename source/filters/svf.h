@@ -163,7 +163,7 @@ struct svf
      */
     bool calc_stable(CoeffType const& fc, CoeffType const& Q)
     {
-        auto F1 = CoeffType(2) * math::sin_fast(math::pi<CoeffType>() * (fc / _fs));
+        auto F1 = CoeffType(2) * remath::sin_fast(remath::pi<CoeffType>() * (fc / _fs));
         return calc_stable_direct(F1, 1 / Q);
     }
 
@@ -186,7 +186,7 @@ struct svf
     void calc_unsafe(CoeffType const& fc, CoeffType const& Q)
     {
 
-        auto F1 = CoeffType(2) * math::sin(math::pi<CoeffType>() * (fc / _fs));
+        auto F1 = CoeffType(2) * remath::sin(remath::pi<CoeffType>() * (fc / _fs));
         calc_unsafe_direct(F1, 1/Q);
     }
 

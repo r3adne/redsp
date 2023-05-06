@@ -7,15 +7,15 @@
 
 
 #include <juce_core/juce_core.h>
-#include "../source/filters/svf.h"
-
-#pragma once
 
 using namespace juce;
 
 struct SVFTest : public UnitTest
 {
     SVFTest() : UnitTest("SVF", "Filters") { }
+
+private:
+    void runTest() override;
 
 };
 
