@@ -2,6 +2,11 @@
 # Created by https://www.toptal.com/developers/gitignore/api/clion,c++,xcode,visualstudio,cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=clion,c++,xcode,visualstudio,cmake
 
+.idea
+.idea/*
+
+*.DS_Store
+
 ### C++ ###
 # Prerequisites
 *.d

@@ -10,6 +10,10 @@ juce_add_console_app(redsp_test
 
 target_sources(redsp_test
         PRIVATE
+        ./test/mathtests.cpp
+        ./test/biquad_tests.cpp
+        ./test/demotest.cpp
+        ./test/svf_tests.cpp
         ./test/main.cpp)
 
 target_compile_definitions(redsp_test

@@ -1,14 +1,17 @@
 #include <juce_core/juce_core.h>
-#include "../source/redsp.h"
+//#include "../source/redsp.h"
 #include "biquad_tests.h"
-#include "svf_tests.h"
+//#include "svf_tests.h"
+#include "mathtests.h"
+//#include "demotest.h"
 
 int main(int argc, char** argv)
 {
   juce::ConsoleApplication app;
   juce::UnitTestRunner runner;
 
-  static BiquadTest biquadtest;
+//  static BiquadTest biquadtest;
+  static MathTest mathtest;
 //  static SVFTest svftest;
 
   juce::int64 seed = 0;

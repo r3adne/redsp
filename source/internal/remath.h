@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <cmath>
 #include "universal.h"
+#include "poly.h"
 
 #ifdef redsp_cxx20
 #include <concepts>
@@ -20,7 +21,7 @@
 namespace redsp
 {
 
-struct math
+struct remath
 {
     //================================================================================================================//
     //==                                                                                                            ==//
@@ -41,7 +42,9 @@ struct math
     static T sin_fast(T x)
     {
         redsp_arithmetic_assert(T)
-        return  std::sin(x); // todo: add pade approx of sin
+        polydiv<T, 10> sin_f1({0.0, 1.0, 0.0, -53272705.0/360869676.0, 0.0, 38518909.0/7217393520.0, 0.0, -269197963.0/3940696861920.0, 0.0, 4585922449.0/15605159573203200.0}, {1.0, 0.0, 2290747.0/120289892.0, 0.0, 1281433.0/7217393520.0, 0.0, 560401.0/562956694560.0, 0.0, 1029037.0/346781323848960.0, 0.0});
+
+        return sin_f1(x);
     }
 
     //! returns an approximation of sin(x), diverging outside ().
@@ -49,7 +52,9 @@ struct math
     static T sin_faster(T x)
     {
         redsp_arithmetic_assert(T)
-        return  std::sin(x); // todo: add fast approx of sin
+        polydiv<T, 6> sin_f2({0.0, 1.0, 0.0, -53.0/396.0, 0.0, 551.0/166320.0}, {1.0, 0.0, 13.0/396.0, 0.0, 5.0/11088.0, 0.0});
+
+        return sin_f2(x);
     }
 
     //! returns cos(x) using stl implementation
@@ -65,7 +70,7 @@ struct math
     static T cos_fast(T x)
     {
         redsp_arithmetic_assert(T)
-         return cos(x); // todo: add pade approx of cos
+        return cos(fmod(x - pi<T>(), twopi<T>()) - pi<T>()); // todo: add pade approx of cos
     }
 
     //! returns an approximation of cos(x), diverging outside ().
@@ -73,7 +78,7 @@ struct math
     static T cos_faster(T x)
     {
         redsp_arithmetic_assert(T)
-        return cos(x); // todo: add faster approx of cos
+        return cos(fmod(x - pi<T>(), twopi<T>()) - pi<T>()); // todo: add faster approx of cos
     }
 
     template <redsp_arithmetic T>
@@ -88,23 +93,27 @@ struct math
     static T tan(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(tan(x));
+        return static_cast<T>(std::tan(x));
     }
 
-    //! returns an approximation of tan(x), diverging outside ()
+    //! returns an approximation of tan(x)
     template <redsp_arithmetic T>
     static T tan_fast(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(std::tanh(x)); // todo: add pade approx of tan
+        polydiv<T, 10> tf({0.0, 1.0, 0.0, -7.0/51.0, 0.0, 1.0/255.0, 0.0, -2.0/69615.0, 0.0, 1.0/34459425.0}, {1.0, 0.0, -8.0/17.0, 0.0, 7.0/255.0, 0.0, -4.0/9945.0, 0.0, 1.0/765765.0, 0.0});
+
+        return tf(x);
     }
 
-    //! returns an approximation of tan(x), diverging outside ()
+    //! returns an approximation of tan(x), which diverges near the poles of tan
     template <redsp_arithmetic T>
     static T tan_faster(T x)
     {
         redsp_arithmetic_assert(T)
-        return static_cast<T>(std::tanh(x)); // todo: add fast approx of tan
+        polydiv<T, 6> tf({0.0, 1.0, 0.0, -1.0/9.0, 0.0, 1.0/945.0}, {1.0, 0.0, -4.0/9.0, 0.0, 1.0/63.0, 0.0});
+
+        return tf(x);
     }
 
     //! returns tanh(x) using stl implementation
@@ -132,12 +141,71 @@ struct math
         return static_cast<T>(std::tanh(x)); // todo: add faster approx of tanh
     }
 
+    template <redsp_arithmetic T>
+    static T log2(T x)
+    {
+        return std::log2(x);
+    }
+
+    //! pretty gross, but returns a good log approximation fast.
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, float>::value, float> log2_fast(float x)
+    {
+        static_assert(std::numeric_limits<float>::is_iec559, "floats must be ieee for this to work");
+        uint32_t vi, mi;
+        float mf, y;
+        std::memcpy(&vi, &x, 4);
+        mi = (vi & 0x007fffff) | 0x3f000000;
+        std::memcpy(&mf, &mi, 4);
+        y = (float) vi * 1.1920928955078125e-7f; // bruh
+
+        return y - 124.22551499f // newton-raphson iteration
+               - 1.498030302f * mf
+               - 1.72587999f / (0.3520887068f + mf);
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, double>::value, double> log2_fast(double x)
+    {
+        // this is ok for now until I figure out how to write a dedicated double version of this
+        return static_cast<double>(log2_fast<float>(static_cast<float>(x)));
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, long double>::value, long double> log2_fast(long double x)
+    {
+        // see above
+        return static_cast<long double>(log2_fast<float>(static_cast<float>(x)));
+    }
+
 
     template <redsp_arithmetic T>
-    static T log_fast(T x)
+    static T sqrt(T x)
     {
-        return 0; // only use specializations!
+        return std::sqrt(x);
     }
+
+//
+//    template<typename T>
+//    static std::enable_if_t<std::is_same<T, float>::value, float> sqrt_fast(float x)
+//    {
+//        union { float f; uint32_t i; } val = {x};	/* Convert type, preserving bit pattern */
+//
+//        uint32_t vi;
+//        float vf = x;
+//
+//        memcpy(&vi, &vf, 4);
+//
+//        vi -= 1 << 23;	/* Subtract 2^m. */
+//        vi >>= 1;		/* Divide by 2. */
+//        vi += 1 << 29;	/* Add ((b + 1) / 2) * 2^m. */
+//    }
+//
+//    template <redsp_arithmetic T>
+//    static T sqrt_fast(T x)
+//    {
+//
+//    }
 
     //================================================================================================================//
     //==                                                                                                            ==//
@@ -157,6 +225,12 @@ struct math
     template <redsp_arithmetic T, redsp_arithmetic T2>
     static bool within(T x, T y, T2 lim) { return abs(x - y) < lim; }
 
+    template <redsp_arithmetic T>
+    static T floor(T x) { return std::floor(x); }
+
+    template <redsp_arithmetic T>
+    static T ceil(T x) { return std::ceil(x); }
+
     //================================================================================================================//
     //==                                                                                                            ==//
     //==                                                 CONSTANTS                                                  ==//
@@ -164,64 +238,49 @@ struct math
     //================================================================================================================//
 
 
-    // todo: improve pi() so that it returns pi as different types when needed
     //! returns pi
     template <redsp_arithmetic T>
     inline static constexpr T pi()
     {
-        return T(3.1415926535);
+        return static_cast<T>(3.14159265358979323846264338327950288419716939937510L);
     }
 
     //! returns two pi
     template <redsp_arithmetic T>
     inline static constexpr T twopi()
     {
-        return pi<T>() * 2;
+        return static_cast<T>(pi<long double>() * 2.0L);
     }
 
     //! returns pi over two
     template <redsp_arithmetic T>
     inline static constexpr T halfpi()
     {
-        return pi<T>() * 0.5;
+        return static_cast<T>(pi<long double>() * 0.5L);
     }
 
-    // todo: make e() not rely on non-constexpr library function
+    //! returns pi over two
+    template <redsp_arithmetic T>
+    inline static constexpr T threepiovertwo()
+    {
+        return static_cast<T>(pi<long double>() * 2.5L);
+    }
+
+
     //! returns e
     template <redsp_arithmetic T>
     inline static constexpr T e()
     {
-        return exp(1);
+        return static_cast<T>(2.71828182845904523536028747135266249775724709369995L);
     }
 
+    template <redsp_arithmetic T>
+    inline static constexpr T sqrt2()
+    {
+        return static_cast<T>(1.41421356237309504880168872420969807856967187537694L);
+    }
 
 };
-
-//! pretty gross, but returns a good log approximation fast. Inspired by Q library (unsure of origin).
-template<>
-float math::log_fast(float x)
-{
-    static_assert(std::numeric_limits<float>::is_iec559, "floats must be ieee for this to work");
-    uint32_t vi, mi;
-    float mf, y;
-    std::memcpy(&vi, &x, 4);
-    mi = (vi & 0x007fffff) | 0x3f000000;
-    std::memcpy(&mf, &mi, 4);
-    y = (float) vi * 1.1920928955078125e-7f; // bruh
-
-    return y - 124.22551499f
-           - 1.498030302f * mf
-           - 1.72587999f / (0.3520887068f + mf);
-}
-
-template<>
-double math::log_fast(double x)
-{
-    // this is ok for now until I figure out how to write a dedicated double version of this
-    return static_cast<double>(log_fast(static_cast<float>(x)));
-}
-
-
 
 } // namespace redsp
 
