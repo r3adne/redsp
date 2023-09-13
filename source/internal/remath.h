@@ -96,7 +96,12 @@ struct remath
         return static_cast<T>(std::tan(x));
     }
 
-    //! returns an approximation of tan(x)
+    /**
+     * returns a good approximation of log, pretty quickly
+     * @tparam T
+     * @param x
+     * @return
+     */
     template <redsp_arithmetic T>
     static T tan_fast(T x)
     {
@@ -106,7 +111,14 @@ struct remath
         return tf(x);
     }
 
-    //! returns an approximation of tan(x), which diverges near the poles of tan
+    /**
+     * returns a good approximation of log, very quickly.
+     * for `flaot`, this returns a total error of 10.0732344252 (i.e. the integral of the residual between nearest representable values of float above -pi/2 and below pi/2)
+     * for `double`, this returns a total error of
+     * @tparam T type of input
+     * @param x input
+     * @return approximantly tan(x)
+     */
     template <redsp_arithmetic T>
     static T tan_faster(T x)
     {
@@ -256,7 +268,14 @@ struct remath
     template <redsp_arithmetic T>
     inline static constexpr T halfpi()
     {
-        return static_cast<T>(pi<long double>() * 0.5L);
+        return static_cast<T>(1.5707963267948966192313216916397514420985846996875529104874722961539082031431044993140L);
+    }
+
+    //! returns negative pi over two - this is here because some of my analytics require getting this value without rounding it to the nearest long double
+    template <redsp_arithmetic T>
+    inline static constexpr T neghalfpi()
+    {
+        return static_cast<T>(-1.5707963267948966192313216916397514420985846996875529104874722961539082031431044993140L);
     }
 
     //! returns pi over two

@@ -106,20 +106,6 @@ struct polyEstrin : public polynomial<T, N, C>
 
 
 template<redsp_arithmetic T, const int N, redsp_arithmetic C = T>
-struct polySIMD : public polynomial<T, N, C>
-{
-    polySIMD(std::initializer_list<C> coefficients) : polynomial<T, N, C>::coeffs(coefficients) { }
-
-    explicit polySIMD(std::array<C, N> coefficients) : polynomial<T, N, C>::coeffs(coefficients) { }
-
-    T eval(T x) override
-    {
-
-    }
-
-};
-
-template<redsp_arithmetic T, const int N, redsp_arithmetic C = T>
 struct polydiv
 {
     std::array<C, N> num;
